@@ -1,6 +1,8 @@
 
 import cv2
 import time
+import csv
+import os
 from ultralytics import YOLOWorld
 from collections import Counter
 from datetime import datetime
@@ -21,6 +23,18 @@ model.set_classes([
     "laptop"
 ])
 
+history_file = "detection_history.csv"
+
+if not os.path.exists(history_file):
+    with open(history_file, "w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            "Date",
+            "Time",
+            "Total Objects",
+            "Object Counts"
+        ])
+
 camera = cv2.VideoCapture(0)
 
 if not camera.isOpened():
@@ -31,6 +45,7 @@ else:
     print("Press Q to quit.")
 
     previous_time = time.time()
+    last_log_time = 0
 
     while True:
         success, frame = camera.read()
@@ -52,11 +67,31 @@ else:
             for class_id in detected_classes
         )
 
+        # Calculate FPS
         current_time = time.time()
         elapsed_time = current_time - previous_time
         fps = 1 / elapsed_time if elapsed_time > 0 else 0
         previous_time = current_time
 
+        # Save detection history every 2 seconds
+        current_log_time = time.time()
+
+        if current_log_time - last_log_time >= 2:
+            with open(
+                history_file, "a", newline="", encoding="utf-8"
+            ) as file:
+                writer = csv.writer(file)
+
+                writer.writerow([
+                    datetime.now().strftime("%Y-%m-%d"),
+                    datetime.now().strftime("%H:%M:%S"),
+                    object_count,
+                    dict(class_counts)
+                ])
+
+            last_log_time = current_log_time
+
+        # Display total detected objects
         cv2.putText(
             annotated_frame,
             f"Objects detected: {object_count}",
@@ -67,6 +102,7 @@ else:
             2
         )
 
+        # Display count for each object category
         y_position = 60
 
         for name, count in class_counts.items():
@@ -81,6 +117,7 @@ else:
             )
             y_position += 30
 
+        # Display FPS
         cv2.putText(
             annotated_frame,
             f"FPS: {fps:.1f}",
@@ -93,10 +130,13 @@ else:
 
         cv2.imshow("AI Object Recognition Camera", annotated_frame)
 
+        # Keyboard controls
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord("s"):
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            timestamp = datetime.now().strftime(
+                "%Y-%m-%d_%H-%M-%S_%f"
+            )
             filename = f"capture_{timestamp}.jpg"
 
             saved = cv2.imwrite(filename, annotated_frame)
