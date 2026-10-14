@@ -1,0 +1,13 @@
+# Downloaded YOLO models
+*.pt
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Local environment settings
+.env
