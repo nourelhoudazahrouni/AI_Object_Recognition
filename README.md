@@ -104,6 +104,21 @@ Banknote detection does not verify whether a banknote is genuine or determine it
 - Save detection history and statistics.
 - Support additional object categories.
 - Evaluate performance under different lighting conditions.
+- **Detection history (CSV):** Automatically records the date, time, total number of detected objects, and object counts approximately every two seconds.
+- **Data analysis:** The CSV history can be opened in Microsoft Excel or another spreadsheet application for further analysis.
+
+## Detection History
+
+The application creates a `detection_history.csv` file when it runs. Each record contains:
+
+| Column | Description |
+|---|---|
+| Date | Date of the recorded detection |
+| Time | Time of the recorded detection |
+| Total Objects | Total number of detected objects |
+| Object Counts | Counts grouped by predicted object category |
+
+The history contains model predictions and may include incorrect classifications. The CSV file is generated locally and is not included in the Git repository by default.
 
 ## Author
 
