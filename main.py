@@ -11,6 +11,7 @@ if not camera.isOpened():
     print("Error: Could not open the webcam.")
 else:
     print("AI Object Recognition Camera started!")
+    print("Press S to take a screenshot.")
     print("Press Q to quit.")
 
     previous_time = time.time()
@@ -54,7 +55,13 @@ else:
 
         cv2.imshow("AI Object Recognition Camera", annotated_frame)
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        key = cv2.waitKey(1) & 0xFF
+
+        if key == ord("s"):
+            cv2.imwrite("capture.jpg", annotated_frame)
+            print("Screenshot saved as capture.jpg")
+
+        if key == ord("q"):
             break
 
 camera.release()
