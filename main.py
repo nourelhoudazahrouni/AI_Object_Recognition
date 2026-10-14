@@ -1,9 +1,25 @@
+
 import cv2
 import time
-from ultralytics import YOLO
+from ultralytics import YOLOWorld
+from collections import Counter
+from datetime import datetime
 
 print("Loading AI model...")
-model = YOLO("yolo11s.pt")
+model = YOLOWorld("yolov8s-world.pt")
+
+model.set_classes([
+    "pen",
+    "banknote",
+    "paper currency",
+    "cell phone",
+    "toothbrush",
+    "person",
+    "bottle",
+    "book",
+    "cup",
+    "laptop"
+])
 
 camera = cv2.VideoCapture(0)
 
@@ -28,6 +44,14 @@ else:
 
         object_count = len(results[0].boxes)
 
+        class_names = results[0].names
+        detected_classes = results[0].boxes.cls.tolist()
+
+        class_counts = Counter(
+            class_names[int(class_id)]
+            for class_id in detected_classes
+        )
+
         current_time = time.time()
         elapsed_time = current_time - previous_time
         fps = 1 / elapsed_time if elapsed_time > 0 else 0
@@ -43,10 +67,24 @@ else:
             2
         )
 
+        y_position = 60
+
+        for name, count in class_counts.items():
+            cv2.putText(
+                annotated_frame,
+                f"{name}: {count}",
+                (10, y_position),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (0, 255, 0),
+                2
+            )
+            y_position += 30
+
         cv2.putText(
             annotated_frame,
             f"FPS: {fps:.1f}",
-            (10, 60),
+            (10, y_position + 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.8,
             (0, 255, 0),
@@ -58,8 +96,15 @@ else:
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord("s"):
-            cv2.imwrite("capture.jpg", annotated_frame)
-            print("Screenshot saved as capture.jpg")
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            filename = f"capture_{timestamp}.jpg"
+
+            saved = cv2.imwrite(filename, annotated_frame)
+
+            if saved:
+                print(f"Screenshot saved as {filename}")
+            else:
+                print("Error: Could not save screenshot.")
 
         if key == ord("q"):
             break
